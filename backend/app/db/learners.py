@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlmodel import col, select
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.learner import Learner
@@ -14,7 +14,7 @@ async def read_learners(
     """Read all learners from the database, optionally filtered by enrollment date."""
     statement = select(Learner)
     if enrolled_after is not None:
-        statement = statement.where(col(Learner.enrolled_at) >= enrolled_after)
+        statement = statement.where(Learner.enrolled_at >= enrolled_after)  # type: ignore[operator]
     result = await session.exec(statement)
     return list(result.all())
 

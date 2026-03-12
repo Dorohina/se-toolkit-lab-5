@@ -1,4 +1,5 @@
 import { useState, useEffect, useReducer, FormEvent } from 'react'
+import Dashboard from './Dashboard'
 import './App.css'
 
 const STORAGE_KEY = 'api_key'
@@ -8,6 +9,11 @@ interface Item {
   type: string
   title: string
   created_at: string
+}
+
+interface Lab {
+  id: string
+  name: string
 }
 
 type FetchState =
@@ -38,6 +44,7 @@ function App() {
   )
   const [draft, setDraft] = useState('')
   const [fetchState, dispatch] = useReducer(fetchReducer, { status: 'idle' })
+  const [labs, setLabs] = useState<Lab[]>([])
 
   useEffect(() => {
     if (!token) return
@@ -55,6 +62,23 @@ function App() {
       .catch((err: Error) =>
         dispatch({ type: 'fetch_error', message: err.message }),
       )
+  }, [token])
+
+  useEffect(() => {
+    if (!token) {
+      setLabs([])
+      return
+    }
+
+    fetch('/labs', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.json()
+      })
+      .then((data: Lab[]) => setLabs(data))
+      .catch(() => setLabs([]))
   }, [token])
 
   function handleConnect(e: FormEvent) {
@@ -121,6 +145,8 @@ function App() {
           </tbody>
         </table>
       )}
+
+      {labs.length > 0 && <Dashboard labs={labs} apiKey={token} />}
     </div>
   )
 }
